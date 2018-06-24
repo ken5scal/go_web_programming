@@ -3,6 +3,7 @@ package main
 import (
 	"net/http"
 	"html/template"
+	"github.com/sausheong/gwp/Chapter_2_Go_ChitChat/chitchat/data"
 )
 
 func main() {
@@ -30,14 +31,25 @@ func main() {
 	}
 	server.ListenAndServe()
 }
+
 func index(writer http.ResponseWriter, request *http.Request) {
-	files := []string{
-		"templates/layout.html",
-		"templates/navbar.html",
-		"templates/index.html",
-	}
-	templates := template.Must(template.ParseFiles(files...))
 	threads, err := data.Threads(); if err == nil {
+		_, err := session(writer, request)
+		public_tmpl_filesfiles := []string{
+			"templates/layout.html",
+			"templates/public.navbar.html",
+			"templates/index.html"}
+		private_tmpl_filesfiles := []string{
+			"templates/layout.html",
+			"templates/private.navbar.html",
+			"templates/index.html"}
+		var templates *template.Template
+		if err != nil {
+			templates := template.Must(template.ParseFiles(private_tmpl_filesfiles...))
+		} else {
+			templates := template.Must(template.ParseFiles(public_tmpl_filesfiles...))
+		}
 		templates.ExecuteTemplate(w, "layout", threads)
 	}
 }
+
