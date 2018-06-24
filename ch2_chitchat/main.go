@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"html/template"
 	"github.com/sausheong/gwp/Chapter_2_Go_ChitChat/chitchat/data"
+	"fmt"
 )
 
 func main() {
@@ -35,21 +36,19 @@ func main() {
 func index(writer http.ResponseWriter, request *http.Request) {
 	threads, err := data.Threads(); if err == nil {
 		_, err := session(writer, request)
-		public_tmpl_filesfiles := []string{
-			"templates/layout.html",
-			"templates/public.navbar.html",
-			"templates/index.html"}
-		private_tmpl_filesfiles := []string{
-			"templates/layout.html",
-			"templates/private.navbar.html",
-			"templates/index.html"}
-		var templates *template.Template
 		if err != nil {
-			templates := template.Must(template.ParseFiles(private_tmpl_filesfiles...))
+			generateHTML(writer, threads, "layout", "public.navbar", "index")
 		} else {
-			templates := template.Must(template.ParseFiles(public_tmpl_filesfiles...))
+			generateHTML(writer, threads, "layout", "private.navbar", "index")
 		}
-		templates.ExecuteTemplate(w, "layout", threads)
 	}
 }
 
+func generateHTML(w http.ResponseWriter, data interface{}, fn ...string) {
+	var files []string
+	for _, file := range fn {
+		files = append(files, fmt.Sprintf("templates/%s.html", file))
+	}
+	templates := template.Must(template.ParseFiles(files...))
+	templates.ExecuteTemplate(w, "layout", data)
+}
