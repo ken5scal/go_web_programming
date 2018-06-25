@@ -4,7 +4,10 @@ import (
 	"net/http"
 	"errors"
 	"github.com/sausheong/gwp/Chapter_2_Go_ChitChat/chitchat/data"
+	"log"
 )
+
+var logger *log.Logger
 
 func session(w http.ResponseWriter, r *http.Request) (sess data.Session, err error) {
 	cookie, err := r.Cookie("_cookie")
@@ -17,4 +20,9 @@ func session(w http.ResponseWriter, r *http.Request) (sess data.Session, err err
 	}
 
 	return
+}
+
+func danger(args ...interface{}) {
+	logger.SetPrefix("ERROR ")
+	logger.Println(args...)
 }
