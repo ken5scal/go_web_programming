@@ -16,7 +16,20 @@ func main() {
 	// ServeMux will try to match the exact URL pattern.
 	// If the URL ends with a slash (/), ServeMux will see
 	// if the requested URL starts with any registered URL
-	http.Handle("/hello", protect(log(hello)))
+
+	// http.HandleFunc("/hello", log(hello)) // This works as well
+	http.Handle("/hello", log(hello))  //<- Handlerfunc implements Handler so this works too
+	http.Handle("/protect", protect(log(hello)))
+
+	//type Handler interface {
+	//  ServeHTTP(ResponseWriter, *Request)
+	//}
+
+	//type HandlerFunc func(ResponseWriter, *Request)
+	//func (f HandlerFunc) ServeHTTP(w ResponseWriter, r *Request) {
+	//  f(w, r)
+	//}
+
 	server.ListenAndServe()
 }
 
