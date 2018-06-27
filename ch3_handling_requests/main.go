@@ -5,14 +5,10 @@ import (
 	"fmt"
 	"runtime"
 	"reflect"
+	"golang.org/x/net/http2"
 )
 
 func main() {
-	server := http.Server{
-		Addr: "127.0.0.1:8080",
-		//Handler: &MyHandler{}, // This gonna route everything here
-	}
-
 	//type Handler interface {
 	//  ServeHTTP(ResponseWriter, *Request)
 	//}
@@ -33,6 +29,11 @@ func main() {
 	// if the requested URL starts with any registered URL
 	http.Handle("/hello/", log(hello))
 
+	server := http.Server{
+		Addr: "127.0.0.1:8080",
+		//Handler: &MyHandler{}, // This gonna route everything here
+	}
+	http2.ConfigureServer(&server, &http2.Server{})
 	server.ListenAndServe()
 }
 
