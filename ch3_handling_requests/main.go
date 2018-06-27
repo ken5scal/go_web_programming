@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"runtime"
 	"reflect"
-	"golang.org/x/net/http2"
 )
 
 func main() {
@@ -33,7 +32,11 @@ func main() {
 		Addr: "127.0.0.1:8080",
 		//Handler: &MyHandler{}, // This gonna route everything here
 	}
-	http2.ConfigureServer(&server, &http2.Server{})
+	// http2 protocol: default curl DOES NOT SUPPORT http2 flag yet
+	// you need to link it to nghttp2 manually
+	// curl -I --http2 --insecure https://localhost:8080/
+	//http2.ConfigureServer(&server, &http2.Server{})
+
 	server.ListenAndServe()
 }
 
