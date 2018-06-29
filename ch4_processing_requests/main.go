@@ -16,17 +16,36 @@ func main() {
 }
 
 func process(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-	fmt.Fprint(w, "r.Form: ")
-	fmt.Fprintln(w,  r.Form)
+	//r.ParseForm()
+	//fmt.Fprint(w, "r.Form: ")
+	//fmt.Fprintln(w,  r.Form)
+	//
+	//// only get the value to the key `post`, form value is always prioritized
+	//fmt.Fprint(w, "r.Form[\"post\": ")
+	//fmt.Fprintln(w, r.Form["post"])
+	//
+	//// just  get the form key-value pairs. Only supports application/x-www-form-urlencoded
+	//fmt.Fprint(w, "r.PostForm: ")
+	//fmt.Fprintln(w, r.PostForm)
 
-	// only get the value to the key `post`, form value is always prioritized
-	fmt.Fprint(w, "r.Form[\"post\": ")
-	fmt.Fprintln(w, r.Form["post"])
+	//// Parsing MultipartForm Encode data
+	//r.ParseMultipartForm(1024)
+	//
+	//// return the form key-value pairs in struct form
+	//fmt.Fprint(w, "r.MultipartForm: ")
+	//fmt.Fprintln(w, r.MultipartForm)
 
-	// just  get the form key-value pairs. Only supports application/x-www-form-urlencoded
+	// Use this to get the key-value pairs for enctype application/x-www-form urlencoded
+	// no need to call ParseFOrm/ParseMaltiPartForm
+	//fmt.Fprint(w, "r.FormValue: ")
+	//fmt.Fprintln(w, r.FormValue("hello"))
+	//
+	//// PostFormValue call the ParseMaultipart method
+	//// but if enctype is `multipart/form-data, then it won't work
+	fmt.Fprint(w, "r.PostFormValue(\"hello\"): ")
+	fmt.Fprintln(w, r.PostFormValue("hello"))
 	fmt.Fprint(w, "r.PostForm: ")
-	fmt.Fprintln(w, r.PostForm)
+	fmt.Fprintln(w, r.PostForm) // Must call `Form` method first
 }
 
 // curl -id "first_name=sausheong&last_name=chang" 127.0.0.1:8080/body
