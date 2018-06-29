@@ -11,9 +11,15 @@ func main() {
 	}
 	http.HandleFunc("/headers", headers)
 	http.HandleFunc("/body", body)
+	http.HandleFunc("/process", process)
 	server.ListenAndServe()
 }
+func process(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	fmt.Fprintln(w, r.Form)
+}
 
+// curl -id "first_name=sausheong&last_name=chang" 127.0.0.1:8080/body
 func body(w http.ResponseWriter, r *http.Request) {
 	len := r.ContentLength
 	body := make([]byte, len)
