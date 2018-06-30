@@ -3,6 +3,7 @@ package main
 import (
 	"net/http"
 	"fmt"
+	"io/ioutil"
 )
 
 func main() {
@@ -28,8 +29,16 @@ func process(w http.ResponseWriter, r *http.Request) {
 	//fmt.Fprint(w, "r.PostForm: ")
 	//fmt.Fprintln(w, r.PostForm)
 
-	//// Parsing MultipartForm Encode data
-	//r.ParseMultipartForm(1024)
+	// Parsing MultipartForm Encode data
+	r.ParseMultipartForm(1024)
+	fileHeader := r.MultipartForm.File["uploaded"][0]
+	file, err := fileHeader.Open()
+	if err == nil {
+		data, err := ioutil.ReadAll(file)
+		if err == nil {
+			fmt.Fprintln(w, string(data))
+		}
+	}
 	//
 	//// return the form key-value pairs in struct form
 	//fmt.Fprint(w, "r.MultipartForm: ")
@@ -42,10 +51,10 @@ func process(w http.ResponseWriter, r *http.Request) {
 	//
 	//// PostFormValue call the ParseMaultipart method
 	//// but if enctype is `multipart/form-data, then it won't work
-	fmt.Fprint(w, "r.PostFormValue(\"hello\"): ")
-	fmt.Fprintln(w, r.PostFormValue("hello"))
-	fmt.Fprint(w, "r.PostForm: ")
-	fmt.Fprintln(w, r.PostForm) // Must call `Form` method first
+	//fmt.Fprint(w, "r.PostFormValue(\"hello\"): ")
+	//fmt.Fprintln(w, r.PostFormValue("hello"))
+	//fmt.Fprint(w, "r.PostForm: ")
+	//fmt.Fprintln(w, r.PostForm) // Must call `Form` method first
 }
 
 // curl -id "first_name=sausheong&last_name=chang" 127.0.0.1:8080/body
