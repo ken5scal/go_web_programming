@@ -1,4 +1,4 @@
-package main
+package ch4_2_HTML_forms_and_Go
 
 import (
 	"net/http"
@@ -17,7 +17,7 @@ func main() {
 }
 
 func process(w http.ResponseWriter, r *http.Request) {
-	//r.ParseForm()
+	//r.ParseForm() // Only parses (HTML) forms like application/x-www-form-urlencoded, not application/json
 	//fmt.Fprint(w, "r.Form: ")
 	//fmt.Fprintln(w,  r.Form)
 	//
