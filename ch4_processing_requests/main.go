@@ -30,9 +30,12 @@ func process(w http.ResponseWriter, r *http.Request) {
 	//fmt.Fprintln(w, r.PostForm)
 
 	// Parsing MultipartForm Encode data
-	r.ParseMultipartForm(1024)
-	fileHeader := r.MultipartForm.File["uploaded"][0]
-	file, err := fileHeader.Open()
+	//r.ParseMultipartForm(1024)
+	//fileHeader := r.MultipartForm.File["uploaded"][0]
+	//file, err := fileHeader.Open()
+	// FormFile returns the first value given the key
+	// Good if you have only one file to be uploaded
+	file, _, err := r.FormFile("uploaded")
 	if err == nil {
 		data, err := ioutil.ReadAll(file)
 		if err == nil {
