@@ -3,12 +3,29 @@ package main
 import (
 	"net/http"
 	"time"
+	"fmt"
 )
 
 func main() {
 	server := &http.Server{Addr: "127.0.0.1:8080"}
 	http.HandleFunc("/set_cookie", setCookie)
+	http.HandleFunc("/get_cookie", getCookie)
 	server.ListenAndServe()
+}
+func getCookie(w http.ResponseWriter, r *http.Request) {
+	h := r.Header["Cookie"]
+	fmt.Fprint(w, "All Cookies: ")
+	fmt.Fprintln(w, h)
+
+	fmt.Fprint(w, "first_cookie: ")
+	c1, err := r.Cookie("first_cookie")
+	if err != nil {
+		fmt.Fprintln(w, "Cannot get the first cookie")
+	}
+	fmt.Fprintln(w, c1)
+
+	fmt.Fprint(w, "All Cookies: ")
+	fmt.Fprintln(w, r.Cookies())
 }
 
 func setCookie(w http.ResponseWriter, r *http.Request) {
@@ -18,7 +35,7 @@ func setCookie(w http.ResponseWriter, r *http.Request) {
 		HttpOnly: true,
 	}
 	c2 := http.Cookie{
-		Name: "second_cookide",
+		Name: "second_cookie",
 		Value: "Manning Publications GO",
 		HttpOnly: true,
 	}
