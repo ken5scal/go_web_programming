@@ -26,8 +26,8 @@ func setUp() {
 }
 
 func TestHandleGet(t *testing.T)  {
-	posdId := 2
-	request, _:= http.NewRequest("GET", fmt.Sprintf("/post/%d", posdId), nil)
+	postId := 2
+	request, _:= http.NewRequest("GET", fmt.Sprintf("/post/%d", postId), nil)
 	mux.ServeHTTP(writer, request)
 
 	if writer.Code != 200 {
@@ -36,14 +36,15 @@ func TestHandleGet(t *testing.T)  {
 
 	var post Post
 	json.Unmarshal(writer.Body.Bytes(), &post)
-	if post.Id != posdId {
+	if post.Id != postId {
 		t.Errorf("Cannot retrieve JSON post")
 	}
 }
 
 func TestHandlePut(t *testing.T) {
+	postId := 2
 	json  := strings.NewReader(`{"content":"Updated post","author":"Kengo Suzuki"}`)
-	request, _ := http.NewRequest("PUT", "/post/1", json)
+	request, _ := http.NewRequest("PUT", fmt.Sprintf("/post/%d", postId), json)
 	mux.ServeHTTP(writer, request)
 
 	if writer.Code != 200 {
