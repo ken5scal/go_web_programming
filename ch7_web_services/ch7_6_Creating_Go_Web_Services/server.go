@@ -7,12 +7,6 @@ import (
 	"encoding/json"
 )
 
-type Post struct {
-	Id int `json:"id"`
-	Content string `json:"content"`
-	Author string `json:"author"`
-}
-
 func main() {
 	server := http.Server{
 		Addr: "127.0.0.1:8080",
@@ -64,7 +58,7 @@ func handlePost(w http.ResponseWriter, r *http.Request) (err error) {
 
 	var post Post
 	json.Unmarshal(body, &post)
-	if err = post.create(); err !=nil{
+	if err = post.Create(); err !=nil{
 		return
 	}
 	w.WriteHeader(200)
@@ -86,7 +80,7 @@ func handlePut(w http.ResponseWriter, r *http.Request) (err error) {
 	r.Body.Read(body)
 
 	json.Unmarshal(body, &post)
-	if err = post.update(); err != nil {
+	if err = post.Update(); err != nil {
 		return
 	}
 	w.WriteHeader(200)
@@ -104,7 +98,7 @@ func handleDelete(w http.ResponseWriter, r *http.Request) (err error) {
 		return
 	}
 
-	if err = post.delete(); err != nil {
+	if err = post.Delete(); err != nil {
 		return
 	}
 	w.WriteHeader(200)

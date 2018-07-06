@@ -22,6 +22,12 @@ func init() {
 	}
 }
 
+func retrieve(id int) (post Post, err error) {
+	post = Post{}
+	err = Db.QueryRow("select id, content, author from posts where id = $1", id).Scan(&post.Id, &post.Content, &post.Author)
+	return
+}
+
 func Posts(limit int) (posts []Post, err error) {
 	rows, err := Db.Query("select id, content, author from posts limit $1", limit)
 	if err != nil {
