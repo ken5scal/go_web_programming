@@ -9,6 +9,60 @@ import (
 	_ "github.com/lib/pq" // within the package, init function is kicked
 )
 
+// Text will know what to do and return the necessary data you want
+// This will be passed into handleRequest to inject sql.DB dependency
+type Text interface {
+	fetch(id int) (err error)
+	Create() (err error)
+	Update() (err error)
+	Delete() (err error)
+}
+
+
+func (post *Post) fetch(id int) (err error) {
+	err = post.Db.QueryRow("select id, content, author from posts where id = $1", id).Scan(&post.Id, &post.Content, &post.Author)
+	return
+}
+
+func (post *Post) Create() (err error) {
+	statement := "insert into posts (content, author) values ($1, $2) returning id"
+	stmt, err := Db.Prepare(statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	err = stmt.QueryRow(post.Content, post.Author).Scan(&post.Id)
+	return
+}
+
+func (post *Post) Update() (err error) {
+	_, err = Db.Exec("update posts set content = $2, author = $3 where id = $1", post.Id, post.Content, post.Author)
+	return
+}
+
+func (post *Post) Delete() (err error) {
+	_, err = Db.Exec("delete from posts where id = $1", post.Id)
+	return
+}
+
+func handleDelete(w http.ResponseWriter, r *http.Request, post Text) (err error) {
+	id, err := strconv.Atoi(path.Base(r.URL.Path))
+	if err != nil {
+		return
+	}
+
+	if err := post.fetch(id); err != nil {
+		return
+	}
+
+	if err = post.Delete(); err != nil {
+		return
+	}
+	w.WriteHeader(200)
+	return
+}
+
+
 type Post struct {
 	Db *sql.DB
 	Id int
@@ -104,56 +158,4 @@ func handlePut(w http.ResponseWriter, r *http.Request, post Text) (err error) {
 	}
 	w.WriteHeader(200)
 	return
-}
-
-func handleDelete(w http.ResponseWriter, r *http.Request, post Text) (err error) {
-	id, err := strconv.Atoi(path.Base(r.URL.Path))
-	if err != nil {
-		return
-	}
-
-	if err := post.fetch(id); err != nil {
-		return
-	}
-
-	if err = post.Delete(); err != nil {
-		return
-	}
-	w.WriteHeader(200)
-	return
-}
-
-func (post *Post) fetch(id int) (err error) {
-	err = post.Db.QueryRow("select id, content, author from posts where id = $1", id).Scan(&post.Id, &post.Content, &post.Author)
-	return
-}
-
-func (post *Post) Create() (err error) {
-	statement := "insert into posts (content, author) values ($1, $2) returning id"
-	stmt, err := Db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	err = stmt.QueryRow(post.Content, post.Author).Scan(&post.Id)
-	return
-}
-
-func (post *Post) Update() (err error) {
-	_, err = Db.Exec("update posts set content = $2, author = $3 where id = $1", post.Id, post.Content, post.Author)
-	return
-}
-
-func (post *Post) Delete() (err error) {
-	_, err = Db.Exec("delete from posts where id = $1", post.Id)
-	return
-}
-
-// Text will know what to do and return the necessary data you want
-// This will be passed into handleRequest to inject sql.DB dependency
-type Text interface {
-	fetch(id int) (err error)
-	Create() (err error)
-	Update() (err error)
-	Delete() (err error)
 }

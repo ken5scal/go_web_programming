@@ -13,6 +13,29 @@ import (
 var mux *http.ServeMux
 var writer *httptest.ResponseRecorder
 
+type FakePost struct {
+	Id int
+	Content string
+	Author string
+}
+
+func (post *FakePost) fetch(id int) (err error) {
+	post.Id = id
+	return
+}
+
+func (post *FakePost) Create() (err error) {
+	return
+}
+
+func (post *FakePost) Update() (err error) {
+	return
+}
+
+func (post *FakePost) Delete() (err error) {
+	return
+}
+
 func TestMain(m *testing.M) {
 	setUp()           // runs only once for all test cases
 	code := m.Run()  //  The individual test case functions are called
@@ -21,7 +44,7 @@ func TestMain(m *testing.M) {
 
 func setUp() {
 	mux = http.NewServeMux()
-	mux.HandleFunc("/post/", handleRequest)
+	mux.HandleFunc("/post/", handleRequest(&FakePost{}))
 	writer = httptest.NewRecorder()    //captures returne http response
 }
 
