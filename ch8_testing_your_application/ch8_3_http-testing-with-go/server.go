@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"database/sql"
 	_ "github.com/lib/pq" // within the package, init function is kicked
+	"fmt"
 )
 
 func main() {
@@ -43,6 +44,7 @@ func handleGet(w http.ResponseWriter, r *http.Request) (err error) {
 
 	post, err := retrieve(id)
 	if err != nil {
+		fmt.Println(err.Error())
 		return
 	}
 	output, err := json.MarshalIndent(&post, "", "\t\t")
