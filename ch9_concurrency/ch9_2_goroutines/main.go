@@ -57,7 +57,7 @@ func print2() {
 }
 
 func goPrint2() {
-	var wg sync.WaitGroup   // Declare Wait group
+	var wg sync.WaitGroup   // Declare Wait group (Ensure all goroutines complete before moving on to the next thing)9
 	wg.Add(2)         // Set up counter
 	go printNumbers2(&wg)
 	go printLetters2(&wg)
