@@ -6,6 +6,11 @@ import (
 )
 
 func main() {
+	c := make(chan int)
+	go thrower(c)
+	go catcher(c)
+	time.Sleep(100 * time.Millisecond)
+
 	w1, w2 := make(chan bool), make(chan bool)
 	go printNumbers2(w1)
 	go printLetters2(w2)
@@ -29,4 +34,18 @@ func printLetters2(w chan bool) {
 		fmt.Printf("%c ", i)
 	}
 	w <- true
+}
+
+func thrower(c chan int) {
+	for i := 0; i < 5; i++ {
+		c <- i
+		fmt.Println("Threw >>", i)
+	}
+}
+
+func catcher(c chan int) {
+	for i := 0; i < 5; i++ {
+		num := <- c
+		fmt.Println("Caught <<", num)
+	}
 }
