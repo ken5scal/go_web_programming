@@ -3,6 +3,7 @@ package main
 import (
 	//"fmt"
 	"time"
+	"sync"
 )
 
 func main() {
@@ -31,28 +32,36 @@ func goPrint1() {
 	go printLetters1()
 }
 
-func printNumbers2() {
+func printNumbers2(wg *sync.WaitGroup) {
 	for i := 0; i < 100; i++ {
 		time.Sleep(1 * time.Microsecond)
 		//fmt.Printf("%d ", i)
 	}
+	wg.Done()
 }
 
-func printLetters2() {
+func printLetters2(wg *sync.WaitGroup) {
 	for i := 'A'; i < 'A' + 100; i++ {
 		time.Sleep(1 * time.Microsecond)
 		//fmt.Printf("%c ", i)
 	}
+	wg.Done()               // Decrement Counter(If you forget, dead lock occurs)
 }
 
 func print2() {
-	printNumbers2()
-	printLetters1()
+	var wg sync.WaitGroup
+	wg.Add(2)
+	printNumbers2(&wg)
+	printLetters2(&wg)
+	wg.Wait()               // Decrement Counter(If you forget, dead lock occurs)
 }
 
 func goPrint2() {
-	go printNumbers2()
-	go printLetters2()
+	var wg sync.WaitGroup   // Declare Wait group
+	wg.Add(2)         // Set up counter
+	go printNumbers2(&wg)
+	go printLetters2(&wg)
+	wg.Wait()               // Blocks until counter reaches 0
 }
 
 //% go test -run x -bench . -cpu=1                                                       (git)-[master]
