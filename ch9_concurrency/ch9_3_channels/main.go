@@ -30,10 +30,46 @@ func main() {
 	go thrower(c)
 	go catcher(c)
 	time.Sleep(100 * time.Millisecond)
+
+	// Select allows you to select one of many channels to receive from or send to.
+	a, b := make(chan string), make(chan string)
+	go callerA(a)
+	go callerB(b)
+	for i := 0; i < 5; i++ {
+		time.Sleep(1 * time.Microsecond) // adding this because otherwise `select` is called too quickly
+		select {
+		case msg:= <- a:
+			fmt.Printf("%s from A\n",msg)
+		case msg := <-b:
+			fmt.Printf("%s from B\n", msg)
+		default:
+			// if you do not set this, deadlock occurs because
+			// both a and b has already sent value and received, thus blocked and asleep.
+			fmt.Println("Default")
+		}
+	}
+
+	a, b = make(chan string), make(chan string)
+	go callerA(a)
+	go callerB(b)
+	var msg string
+	ok1, ok2 := true, true
+	for ok1 || ok2 { //ok1 and ok2 become false when channels close
+		select {
+		case msg, ok1 = <- a:
+			if ok1 {
+				fmt.Printf("%s from A\n", msg)
+			}
+		case msg, ok2 = <-b:
+			if ok2 {
+				fmt.Printf("%s from B\n", msg)
+			}
+		}
+	}
 }
 
 func printNumbers2(w chan bool) {
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 10; i++ {
 		time.Sleep(1 * time.Microsecond)
 		fmt.Printf("%d \n", i)
 	}
@@ -41,7 +77,7 @@ func printNumbers2(w chan bool) {
 }
 
 func printLetters2(w chan bool) {
-	for i := 'A'; i < 'A' + 100; i++ {
+	for i := 'A'; i < 'A' + 10; i++ {
 		time.Sleep(1 * time.Microsecond)
 		fmt.Printf("%c \n", i)
 	}
@@ -60,4 +96,14 @@ func catcher(c chan int) {
 		num := <- c
 		fmt.Println("Caught <<", num)
 	}
+}
+
+func callerA(c chan string) {
+	c <- "Hello World!"
+	close(c)
+}
+
+func callerB(c chan string) {
+	c <- "Good night World!"
+	close(c)
 }
