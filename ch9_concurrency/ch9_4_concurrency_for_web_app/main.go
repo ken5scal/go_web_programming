@@ -31,6 +31,7 @@ func main() {
 	}
 
 	TILESDB = titleDB()
+	fmt.Println("Mosaic server started.")
 	server.ListenAndServe()
 }
 func upload(w http.ResponseWriter, r *http.Request) {
@@ -49,7 +50,7 @@ func mosaic(w http.ResponseWriter, r *http.Request) {
 	original, _, _ := image.Decode(file)
 	bounds := original.Bounds()
 
-	newImage := image.NewNRGBA(image.Rect(bounds.Min.X, bounds.Min.Y, bounds.Max.X, bounds.Max.Y))
+	newImage := image.NewNRGBA(image.Rect(bounds.Min.X, bounds.Min.X, bounds.Max.X, bounds.Max.Y))
 
 	// every time image uploaded, clone the db
 	db := cloneTilesDB()
@@ -118,7 +119,7 @@ func resize(in image.Image, newWidth int) image.NRGBA {
 	ratio := bounds.Dx() / newWidth
 	out := image.NewNRGBA(image.Rect(
 		bounds.Min.X/ratio,
-		bounds.Min.Y/ratio,
+		bounds.Min.X/ratio,
 		bounds.Max.X/ratio,
 		bounds.Max.Y/ratio))
 	for y, new_y := bounds.Min.Y, bounds.Min.Y; y < bounds.Max.Y; y, new_y = y+ratio, new_y+1{
