@@ -14,8 +14,6 @@ import (
 	"encoding/base64"
 )
 
-var TILESDB map[string][3]float64
-
 func main() {
 	// runtime.GOMAXPROCS(runtime.NumCPU())
 	mux := http.NewServeMux()
