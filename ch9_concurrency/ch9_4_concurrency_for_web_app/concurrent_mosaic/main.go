@@ -47,8 +47,6 @@ func mosaic(w http.ResponseWriter, r *http.Request) {
 	// decode and get original image
 	original, _, _ := image.Decode(file)
 	bounds := original.Bounds()
-	// create a new image for the mosaic (IN CASE OF Processing entire image at once)
-	//newimage := image.NewNRGBA(image.Rect(bounds.Min.X, bounds.Min.X, bounds.Max.X, bounds.Max.Y))
 	// build up the tiles database
 	db := cloneTilesDB()
 
@@ -72,54 +70,6 @@ func mosaic(w http.ResponseWriter, r *http.Request) {
 
 	t, _ := template.ParseFiles("results.html")
 	t.Execute(w, images)
-
-	// Processing entire image at once
-	//// source point for each tile, which starts with 0, 0 of each tile
-	//sp := image.Point{0, 0}
-	//for y := bounds.Min.Y; y < bounds.Max.Y; y = y + tileSize {
-	//	for x := bounds.Min.X; x < bounds.Max.X; x = x + tileSize {
-	//		// use the top left most pixel as the average color
-	//		r, g, b, _ := original.At(x, y).RGBA()
-	//		color := [3]float64{float64(r), float64(g), float64(b)}
-	//		// get the closest tile from the tiles DB
-	//		nearest := nearest(color, &db)
-	//		file, err := os.Open(nearest)
-	//		if err == nil {
-	//			img, _, err := image.Decode(file)
-	//			if err == nil {
-	//				// resize the tile to the correct size
-	//				t := resize(img, tileSize)
-	//				tile := t.SubImage(t.Bounds())
-	//				tileBounds := image.Rect(x, y, x+tileSize, y+tileSize)
-	//				// draw the tile into the mosaic
-	//				draw.Draw(newimage, tileBounds, tile, sp, draw.Src)
-	//			} else {
-	//				fmt.Println("error:", err, nearest)
-	//			}
-	//		} else {
-	//			fmt.Println("error:", nearest)
-	//		}
-	//		file.Close()
-	//	}
-	//}
-	//
-	//buf1 := new(bytes.Buffer)
-	//jpeg.Encode(buf1, original, nil)
-	//originalStr := base64.StdEncoding.EncodeToString(buf1.Bytes())
-	//
-	//buf2 := new(bytes.Buffer)
-	//jpeg.Encode(buf2, newimage, nil)
-	//mosaic := base64.StdEncoding.EncodeToString(buf2.Bytes())
-	//
-	//t1 := time.Now()
-	//images := map[string]string{
-	//	"original": originalStr,
-	//	"mosaic":   mosaic,
-	//	"duration": fmt.Sprintf("%v ", t1.Sub(t0)),
-	//}
-	//t, _ := template.ParseFiles("results.html")
-	//t.Execute(w, images)
-
 }
 
 func cut(original image.Image, db *DB, tileSize, x1, y1, x2, y2 int) <-chan image.Image {
