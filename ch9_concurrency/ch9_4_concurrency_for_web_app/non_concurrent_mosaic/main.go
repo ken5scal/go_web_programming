@@ -1,4 +1,4 @@
-package non_concurrent_mosaic
+package main
 
 import (
 	"image"
