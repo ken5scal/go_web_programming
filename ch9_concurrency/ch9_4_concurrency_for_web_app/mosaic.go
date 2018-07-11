@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"math"
 	"os"
+	"sync"
 )
 
 // resize an image by its ratio e.g. ratio 2 means reduce the size by 1/2, 10 means reduce the size by 1/10
@@ -40,10 +41,24 @@ func averageColor(img image.Image) [3]float64 {
 
 var TILESDB map[string][3]float64
 
-func cloneTilesDB() map[string][3]float64 {
-	db := make(map[string][3]float64)
+type DB struct {
+	// Mutual Exclusion: requires only one process (ex: goroutine) can access at the same time.
+	// This must be used in `nearest` function, because it removes the shared data.
+	// without this, Race condition will be invoked and the the behavior of the program becomes erratic and unpredictable
+	// another goroutine can find the same tile just before it’s removed from the db.
+	mutex *sync.Mutex
+	store map[string][3]float64
+}
+
+//func cloneTilesDB() map[string][3]float64 {
+func cloneTilesDB() DB {
+	//db := make(map[string][3]float64)
+	db := DB{
+		mutex: &sync.Mutex{},
+		store: make(map[string][3]float64),
+	}
 	for k, v := range TILESDB {
-		db[k] = v
+		db.store[k] = v
 	}
 	return db
 }
@@ -74,16 +89,18 @@ func tilesDB() map[string][3]float64 {
 }
 
 // find the nearest matching image
-func nearest(target [3]float64, db *map[string][3]float64) string {
+func (db *DB) nearest(target [3]float64) string {
 	var filename string
+	// sets mutex flag by locking it
+	db.mutex.Lock()
 	smallest := 1000000.0
-	for k, v := range *db {
+	for k, v := range db.store {
 		dist := distance(target, v)
 		if dist < smallest {
 			filename, smallest = k, dist
 		}
 	}
-	delete(*db, filename)
+	delete(db.store, filename)
 	return filename
 }
 
