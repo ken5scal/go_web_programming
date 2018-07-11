@@ -8,18 +8,19 @@ import (
 	"math"
 	"os"
 	"sync"
+	"path/filepath"
 )
 
 // resize an image by its ratio e.g. ratio 2 means reduce the size by 1/2, 10 means reduce the size by 1/10
 func resize(in image.Image, newWidth int) image.NRGBA {
 	bounds := in.Bounds()
-	width := bounds.Max.X - bounds.Min.X
+	width := bounds.Dx()
 	ratio := width / newWidth
 	out := image.NewNRGBA(image.Rect(bounds.Min.X/ratio, bounds.Min.X/ratio, bounds.Max.X/ratio, bounds.Max.Y/ratio))
 	for y, j := bounds.Min.Y, bounds.Min.Y; y < bounds.Max.Y; y, j = y+ratio, j+1 {
 		for x, i := bounds.Min.X, bounds.Min.X; x < bounds.Max.X; x, i = x+ratio, i+1 {
 			r, g, b, a := in.At(x, y).RGBA()
-			out.SetNRGBA(i, j, color.NRGBA{uint8(r), uint8(g), uint8(b), uint8(a)})
+			out.SetNRGBA(i, j, color.NRGBA{uint8(r>>8), uint8(g>>8), uint8(b>>8), uint8(a>>8)})
 		}
 	}
 	return *out
@@ -70,7 +71,7 @@ func tilesDB() map[string][3]float64 {
 	// if number of tiles within this dir is less than pixel/tile_size, then it will not able to mosaic the whole picture
 	files, _ := ioutil.ReadDir("tiles")
 	for _, f := range files {
-		name := "tiles/" + f.Name()
+		name := filepath.Join("tiles", f.Name())
 		file, err := os.Open(name)
 		if err == nil {
 			img, _, err := image.Decode(file)
