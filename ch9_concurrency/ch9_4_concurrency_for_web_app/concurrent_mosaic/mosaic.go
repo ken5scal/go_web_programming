@@ -7,9 +7,29 @@ import (
 	"io/ioutil"
 	"math"
 	"os"
-	"sync"
 	"path/filepath"
+	"sync"
 )
+
+type DB struct {
+	mutex *sync.Mutex
+	store map[string][3]float64
+}
+
+func (db *DB) nearest(target [3]float64) string {
+	var filename string
+	db.mutex.Lock()
+	smallest := 1000000.0
+	for k, v := range db.store {
+		dist := distance(target, v)
+		if dist < smallest {
+			filename, smallest = k, dist
+		}
+	}
+	delete(db.store, filename)
+	db.mutex.Unlock()
+	return filename
+}
 
 // resize an image by its ratio e.g. ratio 2 means reduce the size by 1/2, 10 means reduce the size by 1/10
 func resize(in image.Image, newWidth int) image.NRGBA {
@@ -20,7 +40,7 @@ func resize(in image.Image, newWidth int) image.NRGBA {
 	for y, j := bounds.Min.Y, bounds.Min.Y; y < bounds.Max.Y; y, j = y+ratio, j+1 {
 		for x, i := bounds.Min.X, bounds.Min.X; x < bounds.Max.X; x, i = x+ratio, i+1 {
 			r, g, b, a := in.At(x, y).RGBA()
-			out.SetNRGBA(i, j, color.NRGBA{uint8(r>>8), uint8(g>>8), uint8(b>>8), uint8(a>>8)})
+			out.SetNRGBA(i, j, color.NRGBA{uint8(r >> 8), uint8(g >> 8), uint8(b >> 8), uint8(a >> 8)})
 		}
 	}
 	return *out
@@ -42,33 +62,22 @@ func averageColor(img image.Image) [3]float64 {
 
 var TILESDB map[string][3]float64
 
-type DB struct {
-	// Mutual Exclusion: requires only one process (ex: goroutine) can access at the same time.
-	// This must be used in `nearest` function, because it removes the shared data.
-	// without this, Race condition will be invoked and the the behavior of the program becomes erratic and unpredictable
-	// another goroutine can find the same tile just before it’s removed from the db.
-	mutex *sync.Mutex
-	store map[string][3]float64
-}
-
-//func cloneTilesDB() map[string][3]float64 {
 func cloneTilesDB() DB {
-	//db := make(map[string][3]float64)
-	db := DB{
-		mutex: &sync.Mutex{},
-		store: make(map[string][3]float64),
-	}
+	db := make(map[string][3]float64)
 	for k, v := range TILESDB {
-		db.store[k] = v
+		db[k] = v
 	}
-	return db
+	tiles := DB{
+		store: db,
+		mutex: &sync.Mutex{},
+	}
+	return tiles
 }
 
 // populate a tiles database in memory
 func tilesDB() map[string][3]float64 {
 	fmt.Println("Start populating tiles db ...")
 	db := make(map[string][3]float64)
-	// if number of tiles within this dir is less than pixel/tile_size, then it will not able to mosaic the whole picture
 	files, _ := ioutil.ReadDir("tiles")
 	for _, f := range files {
 		name := filepath.Join("tiles", f.Name())
@@ -87,22 +96,6 @@ func tilesDB() map[string][3]float64 {
 	}
 	fmt.Println("Finished populating tiles db.")
 	return db
-}
-
-// find the nearest matching image
-func (db *DB) nearest(target [3]float64) string {
-	var filename string
-	// sets mutex flag by locking it
-	db.mutex.Lock()
-	smallest := 1000000.0
-	for k, v := range db.store {
-		dist := distance(target, v)
-		if dist < smallest {
-			filename, smallest = k, dist
-		}
-	}
-	delete(db.store, filename)
-	return filename
 }
 
 // find the Eucleadian distance between 2 points

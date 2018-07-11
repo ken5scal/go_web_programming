@@ -16,7 +16,7 @@ import (
 )
 
 func main() {
-	// runtime.GOMAXPROCS(runtime.NumCPU())
+	runtime.GOMAXPROCS(runtime.NumCPU())
 	mux := http.NewServeMux()
 	files := http.FileServer(http.Dir("public"))
 	mux.Handle("/static/", http.StripPrefix("/static/", files))
@@ -52,9 +52,9 @@ func mosaic(w http.ResponseWriter, r *http.Request) {
 
 	// Fanning out, cutting up image for independent processing
 	c1 := cut(original, &db, tileSize, bounds.Min.X, bounds.Min.Y, bounds.Max.X/2, bounds.Max.Y/2)
-	c2 := cut(original, &db, tileSize, bounds.Min.X/2, bounds.Min.Y, bounds.Max.X, bounds.Max.Y/2)
-	c3 := cut(original, &db, tileSize, bounds.Min.X, bounds.Min.Y/2, bounds.Max.X/2, bounds.Max.Y)
-	c4 := cut(original, &db, tileSize, bounds.Min.X/2, bounds.Min.Y/2, bounds.Max.X, bounds.Max.Y)
+	c2 := cut(original, &db, tileSize, bounds.Max.X/2, bounds.Min.Y, bounds.Max.X, bounds.Max.Y/2)
+	c3 := cut(original, &db, tileSize, bounds.Min.X, bounds.Max.Y/2, bounds.Max.X/2, bounds.Max.Y)
+	c4 := cut(original, &db, tileSize, bounds.Max.X/2, bounds.Max.Y/2, bounds.Max.X, bounds.Max.Y)
 	c := combine(bounds, c1, c2, c3, c4)
 
 	buf1 := new(bytes.Buffer)
