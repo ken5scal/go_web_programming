@@ -1,4 +1,4 @@
-package main
+package non_concurrent_mosaic
 
 import (
 	"fmt"
