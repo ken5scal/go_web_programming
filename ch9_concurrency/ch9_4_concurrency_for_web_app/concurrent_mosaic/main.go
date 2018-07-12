@@ -138,7 +138,7 @@ func combine(r image.Rectangle, c1, c2, c3, c4 <-chan image.Image) <-chan string
 			case s2, ok2 = <-c2:
 				go copy(img, s2.Bounds(), s2, image.Point{r.Max.X / 2, r.Min.Y})
 			case s3, ok3 = <-c3:
-				go copy(img, s2.Bounds(), s3, image.Point{r.Min.X, r.Max.Y / 2})
+				go copy(img, s3.Bounds(), s3, image.Point{r.Min.X, r.Max.Y / 2})
 			case s4, ok4 = <-c4:
 				go copy(img, s4.Bounds(), s4, image.Point{r.Max.X / 2, r.Max.Y / 2})
 			}
