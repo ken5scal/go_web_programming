@@ -1,18 +1,18 @@
 package main
 
 import (
-	"image"
-	"fmt"
-	"os"
-	"net/http"
-	"html/template"
-	"time"
-	"strconv"
-	"image/draw"
 	"bytes"
-	"image/jpeg"
 	"encoding/base64"
+	"fmt"
+	"html/template"
+	"image"
+	"image/draw"
+	"image/jpeg"
+	"net/http"
+	"os"
+	"strconv"
 	"sync"
+	"time"
 )
 
 func main() {
@@ -112,7 +112,7 @@ func cut(original image.Image, db *DB, tileSize, x1, y1, x2, y2 int) <-chan imag
 }
 
 // returning a receive-only channel
-func combine(r image.Rectangle, c1,c2,c3,c4 <- chan image.Image) <- chan string {
+func combine(r image.Rectangle, c1, c2, c3, c4 <-chan image.Image) <-chan string {
 	c := make(chan string)
 
 	go func() {
@@ -133,16 +133,16 @@ func combine(r image.Rectangle, c1,c2,c3,c4 <- chan image.Image) <- chan string 
 		for {
 			// start processing whichever segment that comes first
 			select {
-			case s1, ok1 = <- c1:
+			case s1, ok1 = <-c1:
 				go copy(img, s1.Bounds(), s1, image.Point{r.Min.X, r.Min.Y})
-			case s2, ok2 = <- c2:
-				go copy(img, s2.Bounds(), s2, image.Point{r.Max.X/2, r.Min.Y})
-			case s2, ok3 = <- c3:
-				go copy(img, s2.Bounds(), s3, image.Point{r.Min.X, r.Max.Y/2})
-			case s2, ok4 = <- c4:
-				go copy(img, s4.Bounds(), s4, image.Point{r.Max.X/2, r.Max.Y/2})
+			case s2, ok2 = <-c2:
+				go copy(img, s2.Bounds(), s2, image.Point{r.Max.X / 2, r.Min.Y})
+			case s2, ok3 = <-c3:
+				go copy(img, s2.Bounds(), s3, image.Point{r.Min.X, r.Max.Y / 2})
+			case s2, ok4 = <-c4:
+				go copy(img, s4.Bounds(), s4, image.Point{r.Max.X / 2, r.Max.Y / 2})
 			}
-			if (ok1 && ok2 && ok3 && ok4) {
+			if ok1 && ok2 && ok3 && ok4 {
 				break
 			}
 		}
