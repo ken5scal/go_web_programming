@@ -1,78 +1,16 @@
 package main
 
 import (
-	"net/http"
-	"strconv"
-	"path"
-	"encoding/json"
 	"database/sql"
-	_ "github.com/lib/pq" // within the package, init function is kicked
+	"encoding/json"
+	"net/http"
+	_ "github.com/lib/pq"
+	"path"
+	"strconv"
 )
 
-// Text will know what to do and return the necessary data you want
-// This will be passed into handleRequest to inject sql.DB dependency
-type Text interface {
-	fetch(id int) (err error)
-	Create() (err error)
-	Update() (err error)
-	Delete() (err error)
-}
-
-
-func (post *Post) fetch(id int) (err error) {
-	err = post.Db.QueryRow("select id, content, author from posts where id = $1", id).Scan(&post.Id, &post.Content, &post.Author)
-	return
-}
-
-func (post *Post) Create() (err error) {
-	statement := "insert into posts (content, author) values ($1, $2) returning id"
-	stmt, err := Db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	err = stmt.QueryRow(post.Content, post.Author).Scan(&post.Id)
-	return
-}
-
-func (post *Post) Update() (err error) {
-	_, err = Db.Exec("update posts set content = $2, author = $3 where id = $1", post.Id, post.Content, post.Author)
-	return
-}
-
-func (post *Post) Delete() (err error) {
-	_, err = Db.Exec("delete from posts where id = $1", post.Id)
-	return
-}
-
-func handleDelete(w http.ResponseWriter, r *http.Request, post Text) (err error) {
-	id, err := strconv.Atoi(path.Base(r.URL.Path))
-	if err != nil {
-		return
-	}
-
-	if err := post.fetch(id); err != nil {
-		return
-	}
-
-	if err = post.Delete(); err != nil {
-		return
-	}
-	w.WriteHeader(200)
-	return
-}
-
-
-type Post struct {
-	Db *sql.DB
-	Id int
-	Content string
-	Author string
-}
-
-var Db *sql.DB
-
 func main() {
+	// connect to the Db
 	var err error
 	db, err := sql.Open("postgres", "user=gwp dbname=gwp password=gwp sslmode=disable")
 	if err != nil {
@@ -82,11 +20,12 @@ func main() {
 	server := http.Server{
 		Addr: "127.0.0.1:8080",
 	}
-
 	http.HandleFunc("/post/", handleRequest(&Post{Db: db}))
 	server.ListenAndServe()
 }
 
+
+// main handler function
 func handleRequest(t Text) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var err error
@@ -100,7 +39,6 @@ func handleRequest(t Text) http.HandlerFunc {
 		case "DELETE":
 			err = handleDelete(w, r, t)
 		}
-
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -108,17 +46,18 @@ func handleRequest(t Text) http.HandlerFunc {
 	}
 }
 
+// Retrieve a post
+// GET /post/1
 func handleGet(w http.ResponseWriter, r *http.Request, post Text) (err error) {
 	id, err := strconv.Atoi(path.Base(r.URL.Path))
 	if err != nil {
 		return
 	}
-
 	err = post.fetch(id)
 	if err != nil {
 		return
 	}
-	output, err := json.MarshalIndent(&post, "", "\t\t")
+	output, err := json.MarshalIndent(post, "", "\t\t")
 	if err != nil {
 		return
 	}
@@ -127,35 +66,128 @@ func handleGet(w http.ResponseWriter, r *http.Request, post Text) (err error) {
 	return
 }
 
+// Create a post
+// POST /post/
 func handlePost(w http.ResponseWriter, r *http.Request, post Text) (err error) {
-	body := make([]byte, r.ContentLength)
+	len := r.ContentLength
+	body := make([]byte, len)
 	r.Body.Read(body)
-
-	json.Unmarshal(body, &post)
-	if err = post.Create(); err !=nil{
+	json.Unmarshal(body, post)
+	err = post.create()
+	if err != nil {
 		return
 	}
 	w.WriteHeader(200)
 	return
 }
 
+// Update a post
+// PUT /post/1
 func handlePut(w http.ResponseWriter, r *http.Request, post Text) (err error) {
 	id, err := strconv.Atoi(path.Base(r.URL.Path))
 	if err != nil {
 		return
 	}
-
-	if err := post.fetch(id); err != nil {
+	err = post.fetch(id)
+	if err != nil {
 		return
 	}
-
-	body := make([]byte, r.ContentLength)
+	len := r.ContentLength
+	body := make([]byte, len)
 	r.Body.Read(body)
-
-	json.Unmarshal(body, &post)
-	if err = post.Update(); err != nil {
+	json.Unmarshal(body, post)
+	err = post.update()
+	if err != nil {
 		return
 	}
 	w.WriteHeader(200)
+	return
+}
+
+// Delete a post
+// DELETE /post/1
+func handleDelete(w http.ResponseWriter, r *http.Request, post Text) (err error) {
+	id, err := strconv.Atoi(path.Base(r.URL.Path))
+	if err != nil {
+		return
+	}
+	err = post.fetch(id)
+	if err != nil {
+		return
+	}
+	err = post.delete()
+	if err != nil {
+		return
+	}
+	w.WriteHeader(200)
+	return
+}
+
+
+type Text interface {
+	fetch(id int) (err error)
+	create() (err error)
+	update() (err error)
+	delete() (err error)
+}
+
+type Post struct {
+	Db      *sql.DB
+	Id      int    `json:"id"`
+	Content string `json:"content"`
+	Author  string `json:"author"`
+}
+
+// Get a single post
+func (post *Post) fetch(id int) (err error) {
+	err = post.Db.QueryRow("select id, content, author from posts where id = $1", id).Scan(&post.Id, &post.Content, &post.Author)
+	return
+}
+
+// Create a new post
+func (post *Post) create() (err error) {
+	statement := "insert into posts (content, author) values ($1, $2) returning id"
+	stmt, err := post.Db.Prepare(statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	err = stmt.QueryRow(post.Content, post.Author).Scan(&post.Id)
+	return
+}
+
+// Update a post
+func (post *Post) update() (err error) {
+	_, err = post.Db.Exec("update posts set content = $2, author = $3 where id = $1", post.Id, post.Content, post.Author)
+	return
+}
+
+// Delete a post
+func (post *Post) delete() (err error) {
+	_, err = post.Db.Exec("delete from posts where id = $1", post.Id)
+	return
+}
+
+
+type FakePost struct {
+	Id      int
+	Content string
+	Author  string
+}
+
+func (post *FakePost) fetch(id int) (err error) {
+	post.Id = id
+	return
+}
+
+func (post *FakePost) create() (err error) {
+	return
+}
+
+func (post *FakePost) update() (err error) {
+	return
+}
+
+func (post *FakePost) delete() (err error) {
 	return
 }
